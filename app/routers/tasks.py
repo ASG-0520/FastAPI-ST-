@@ -1,9 +1,14 @@
-from fastapi import FastAPI, Path, Query, HTTPException, status
+from fastapi import APIRouter, Path, Query, HTTPException, status, Depends
 from pydantic import BaseModel
 from typing import Annotated
 
+from app.dependencies import get_token_header
 
-app = FastAPI()
+router = APIRouter(
+    prefix="/task",
+    # tags=["Task"],
+    dependencies=[Depends(get_token_header)]
+)
 
 
 class Task(BaseModel):
@@ -18,13 +23,13 @@ to_do_list = {}
 
 
 # show ToDoList
-@app.get("/todolist")
-async def todolist():
+@router.get("/todolist", tags=["Show todolist"])
+async def show_todolist():
     return to_do_list
 
 
 # post task in list
-@app.post("/post-task/{task_id}")
+@router.post("/{task_id}", tags=["Create task"])
 async def post_task(task_id: Annotated[int, Path(description="Add task")], task: Task):
     if task_id in to_do_list:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This ID already exist")
@@ -33,7 +38,7 @@ async def post_task(task_id: Annotated[int, Path(description="Add task")], task:
 
 
 # get task via id
-@app.get("/get-task/{task_id}")
+@router.get("/{task_id}", tags=["Get task"])
 async def get_task_via_id(task_id: Annotated[int, Path(description="Get task")]):
 
     if task_id in to_do_list:
@@ -42,7 +47,7 @@ async def get_task_via_id(task_id: Annotated[int, Path(description="Get task")])
 
 
 # get task via name
-@app.get("/get-task")
+@router.get("/", tags=["Get task"])
 async def get_task_via_name(name: Annotated[str | None,
                             Query(description="Get task via query name", title="Name")] = None
                             ):
@@ -53,7 +58,7 @@ async def get_task_via_name(name: Annotated[str | None,
 
 
 # Update task via ID
-@app.put("/update-task/{task_id}")
+@router.put("/{task_id}", tags=["Update task"])
 async def update_task_via_id(task_id: Annotated[int, Path(description="Update task, used to receive data that should replace the existing data.")],
                              updated_task: Task
                              ):
@@ -64,7 +69,7 @@ async def update_task_via_id(task_id: Annotated[int, Path(description="Update ta
     return to_do_list[task_id]
 
 # Update task via ID
-# @app.put("/update-task/{task_id}")
+# @router.put("/update-task/{task_id}")
 # async def update_task_via_id(task_id: Annotated[int, Path(description="Update task via ID")],
 #                              updated_task: Task
 #                              ):
@@ -87,7 +92,7 @@ async def update_task_via_id(task_id: Annotated[int, Path(description="Update ta
 
 # Update task
 
-@app.patch("/update-task/{task_id}", response_model=Task)
+@router.patch("/{task_id}", response_model=Task, tags=["Update task"])
 async def update_task_via_id(task_id: Annotated[int, Path(description="Update task, send only the data that you want to update")],
                              update_task: Task):
     if task_id not in to_do_list:
@@ -101,7 +106,7 @@ async def update_task_via_id(task_id: Annotated[int, Path(description="Update ta
 
 
 # delete task
-@app.delete("/delete-task/{task_id}")
+@router.delete("/{task_id}", tags=["Delete task"])
 async def delete_task_via_id(task_id: Annotated[int, Path(description="Delete task")]):
     if task_id not in to_do_list:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ID notFound")
