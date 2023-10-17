@@ -28,7 +28,7 @@ async def show_todolist():
     return to_do_list
 
 
-# post task in list
+# Create task
 @router.post("/{task_id}", tags=["Create task"])
 async def post_task(task_id: Annotated[int, Path(description="Add task")], task: Task):
     if task_id in to_do_list:
