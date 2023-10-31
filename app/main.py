@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+import uvicorn
+from fastapi import FastAPI, Depends
 from app.routers import users, tasks
-
+from dependencies import get_jwt
 description = """
 🔒 X-token = fake-super-secret-token 🔑 
 
@@ -31,6 +32,7 @@ tags_metadata = [
     },
 ]
 app = FastAPI(
+    dependencies=[Depends(get_jwt)],
     openapi_tags=tags_metadata,
     title="FastAPI-ST-",
     description=description,
@@ -41,3 +43,7 @@ app = FastAPI(
 
 app.include_router(users.router)
 app.include_router(tasks.router)
+# TODO router /token
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
